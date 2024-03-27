@@ -10,13 +10,14 @@ rc = redis.Redis()
 
 def get_page(url: str) -> str:
     """Fetch HTML content from a URL and cache it"""
-    # Increment the count for this URL
-    rc.incr(f"count:{url}")
+    # Check if the content is already cached
+    cached_content = rc.get(f"cached:{url}")
+    if cached_content:
+        print("Content found in cache.")
+        return cached_content.decode('utf-8')
 
-    # Get the current count
-    count = rc.get(f"count:{url}")
-
-    # Fetch HTML content from the URL
+    # If content is not cached, fetch it from the URL
+    print("Fetching content from URL.")
     html_content = requests.get(url).text
 
     # Cache the HTML content with an expiration time of 10 seconds
