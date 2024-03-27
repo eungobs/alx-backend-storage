@@ -1,30 +1,21 @@
 #!/usr/bin/env python3
 """
-Module to define the get_page function
+create a web cach
 """
 import redis
 import requests
-
-# Connect to Redis
 rc = redis.Redis()
+count = 0
+
 
 def get_page(url: str) -> str:
-    """Fetch HTML content from a URL and cache it"""
-    # Check if the content is already cached
-    cached_content = rc.get(f"cached:{url}")
-    if cached_content:
-        print("Content found in cache.")
-        return cached_content.decode('utf-8')
+    """ get a page and cach value"""
+    rc.set(f"cached:{url}", count)
+    resp = requests.get(url)
+    rc.incr(f"count:{url}")
+    rc.setex(f"cached:{url}", 10, rc.get(f"cached:{url}"))
+    return resp.text
 
-    # If content is not cached, fetch it from the URL
-    print("Fetching content from URL.")
-    html_content = requests.get(url).text
-
-    # Cache the HTML content with an expiration time of 10 seconds
-    rc.setex(f"cached:{url}", 10, html_content)
-
-    return html_content
 
 if __name__ == "__main__":
-    # Test the get_page function
-    print(get_page('http://slowwly.robertomurray.co.uk'))
+    get_page('http://slowwly.robertomurray.co.uk')
