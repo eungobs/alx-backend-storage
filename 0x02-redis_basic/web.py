@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
 """
-create a web cach
+create a web cache
 """
 import redis
 import requests
-rc = redis.Redis()
-count = 0
 
+rc = redis.Redis()
 
 def get_page(url: str) -> str:
-    """ get a page and cach value"""
-    rc.set(f"cached:{url}", count)
-    resp = requests.get(url)
+    """ get a page and cache value """
     rc.incr(f"count:{url}")
-    rc.setex(f"cached:{url}", 10, rc.get(f"cached:{url}"))
-    return resp.text
-
+    count = rc.get(f"count:{url}")
+    rc.setex(f"cached:{url}", 10, requests.get(url).text)
+    return rc.get(f"cached:{url}").decode('utf-8')
 
 if __name__ == "__main__":
-    get_page('http://slowwly.robertomurray.co.uk')
+    print(get_page('http://slowwly.robertomurray.co.uk'))
